@@ -1,9 +1,8 @@
 """
 File: searchengine.py
 ---------------------
-You fill in this comment
+This program is being used to create a search engine
 """
-
 
 import os
 import sys
@@ -60,10 +59,73 @@ def create_index(filenames, index, file_titles):
     >>> file_titles
     {'test1.txt': 'File 1 Title'}
     """
-    pass
+    # open file from the list
+    for file in filenames:
+        with open(file) as f:
+            title = next(f)[:-1]
+            words_in_title = make_list_of_words(title)
+
+            # Add title to files_titles list
+            if title not in file_titles:
+                file_titles[file] = title
+
+            # Add title words to index list
+            for word in words_in_title:
+                new_lower_word = clean_word(word)
+
+                if new_lower_word != "":
+                    add_term_to_index(index, new_lower_word, file)
+
+            # Add the rest of the words to the index list
+            for line in f:
+                raw_terms = make_list_of_words(line)
+                for word in raw_terms:
+                    term = clean_word(word)
+                    if term != "":
+                        add_term_to_index(index, term, file)
+
+
+def make_list_of_words(line):
+    """for each line of the file,
+    this function make a list of each word in said line"""
+
+    line = line.strip()
+
+    raw = line.split()
+
+    return raw
+
+
+def clean_word(word):
     """
-    You implement this function.  Don't forget to remove the 'pass' statement above.
+    This function will strip any punctuation or
+    other characters return the word, in lowercase
     """
+    word = word.strip()
+
+    new_word = word.lower()
+
+    new_word_2 = new_word.strip(string.punctuation)
+
+    return new_word_2
+
+
+def add_term_to_index(index, term, file):
+    """
+    This function adds the term and files associated with said term
+    to the index
+    """
+    if term not in index:
+
+        index[term] = []
+
+        index[term].append(file)
+
+    else:
+
+        if file not in index[term]:
+
+            index[term].append(file)
 
 
 def search(index, query):
@@ -81,7 +143,7 @@ def search(index, query):
     >>> create_index(['test1.txt', 'test2.txt'], index, {})
     >>> search(index, 'apple')
     ['test1.txt']
-    >>> search(index, 'ball')
+    >>> search(index'ball')
     ['test1.txt', 'test2.txt']
     >>> search(index, 'file')
     ['test1.txt', 'test2.txt']
@@ -100,10 +162,54 @@ def search(index, query):
     >>> search(index, 'apple ball nope')
     []
     """
-    pass
+    # Put search into a list
+    words = query.split()
+    list_of_files = []
+    first_term = words[0]
+
+    if len(words) == 1:
+        for word in words:
+            if word in index:
+                list_of_files += index[word]
+
+    if len(words) > 1:
+        if first_term in index:
+            list_of_files += index[first_term]
+
+        # Get the next term
+        for i in range(len(words) - 1):
+            next_term = words[i + 1]
+
+            # Return empty list if term not in index
+            if next_term not in index:
+                for j in range(len(list_of_files)):
+                    list_of_files.pop()
+
+            else:
+                list2 = index[next_term]
+
+                # Find all the common files between all words in query
+                list_of_files = find_intersection(list_of_files, list2)
+
+    return list_of_files
+
+
+def find_intersection(list1, list2):
     """
-    You implement this function.  Don't forget to remove the 'pass' statement above.
+    This function is passed two lists and returns a new list containing
+    'intersection' of the two elements.
     """
+    intersection = []
+
+    for elem in list1:
+        for i in range(len(list2)):
+            elem_2 = list2[i]
+
+            if elem == elem_2:
+                if elem not in intersection:
+                    intersection.append(elem)
+
+    return intersection
 
 
 ##### YOU SHOULD NOT NEED TO MODIFY ANY CODE BELOW THIS LINE (UNLESS YOU'RE ADDING EXTENSIONS) #####
@@ -117,14 +223,14 @@ def do_searches(index, file_titles):
     """
     while True:
         query = input("Query (empty query to stop): ")
-        query = query.lower()                   # convert query to lowercase
+        query = query.lower()  # convert query to lowercase
         if query == '':
             break
         results = search(index, query)
 
         # display query results
         print(f"Results for query '{query}':")
-        if results:                             # check for non-empty results list
+        if results:  # check for non-empty results list
             for i in range(len(results)):
                 title = file_titles[results[i]]
                 print(f"{i + 1}.  Title: {title},  File: {results[i]}")
@@ -174,8 +280,8 @@ def main():
         if os.path.exists(directory):
             # Build index from files in the given directory
             files = textfiles_in_dir(directory)
-            index = {}          # index is empty to start
-            file_titles = {}    # mapping of file names to article titles is empty to start
+            index = {}  # index is empty to start
+            file_titles = {}  # mapping of file names to article titles is empty to start
             create_index(files, index, file_titles)
 
             # Either allow the user to search using the index, or just print the index
